@@ -1,0 +1,48 @@
+name: Verify
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+
+  deploy:
+    name: Deploy to Netlify
+    needs: test
+    if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.NETLIFY_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: netlify-production
+    concurrency:
+      group: netlify-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Deploy tested main revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+        run: |
+          set -eu
+          latest_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [ "$latest_sha" != "$GITHUB_SHA" ]; then
+            echo "A newer main revision is available. Skipping this deployment."
+            exit 0
+          fi
+          : "${NETLIFY_AUTH_TOKEN:?Configure the environment secret}"
+          : "${NETLIFY_SITE_ID:?Configure the environment variable}"
+          npx --yes netlify-cli@27.20.1 deploy --prod --no-build --dir=public --site="$NETLIFY_SITE_ID"
