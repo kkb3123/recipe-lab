@@ -2,6 +2,7 @@ name: Verify
 on:
   push:
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -16,6 +17,29 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+
+  preview:
+    name: Draft preview on Netlify
+    needs: test
+    if: ${{ success() && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: netlify-preview
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Publish a draft deploy
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+        run: |
+          set -eu
+          : "${NETLIFY_AUTH_TOKEN:?Configure the netlify-preview environment secret}"
+          : "${NETLIFY_SITE_ID:?Configure the netlify-preview environment variable}"
+          env -u NETLIFY_DEPLOY_TO_PROD npx --yes netlify-cli@27.20.1 deploy --no-build --dir=public --site="$NETLIFY_SITE_ID"
 
   deploy:
     name: Deploy to Netlify
