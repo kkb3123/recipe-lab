@@ -10,9 +10,14 @@ test('lists all recipes, searches, and filters by cuisine and chef', async ({ pa
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  const hero = page.locator('.hero-picture img');
-  await expect(hero).toBeVisible();
-  await expect.poll(() => hero.evaluate(img => img.naturalWidth)).toBe(1150);
+  const ranking = page.locator('.hero').getByRole('region', { name: '추천 레시피 TOP 5' });
+  await expect(ranking).toBeVisible();
+  await expect(ranking.locator('.rank')).toHaveText(['1', '2', '3', '4', '5']);
+  await expect(page.locator('#popularGrid')).toHaveCount(1);
+  await ranking.getByRole('button').nth(1).click();
+  await expect(page.locator('#detail').getByRole('heading', { name: '김치우동' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#modal')).not.toHaveClass(/open/);
   const cards = page.locator('#recipes .recipe');
   await expect(cards).toHaveCount(51);
   await page.locator('#search').fill('갈배제육볶음');

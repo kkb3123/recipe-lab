@@ -35,21 +35,17 @@ test('rejects duplicate IDs and normalized names, including the ten existing Ryu
   }
 });
 
-test('verifies manifest, icons and the home banner photo', () => {
+test('preserves manifest and icons', () => {
   for (const line of read('./assets.sha256').toString().trim().split('\n')) {
     const [checksum, path] = line.split(/\s+/);
     assert.equal(hash(read('../public/' + path)), checksum, path);
   }
 });
 
-test('publishes only attributed photos and includes every referenced local icon', () => {
+test('publishes only attributed remote photos and includes every referenced local icon', () => {
   const credits = read('../public/photo-credits.html').toString();
   const publicEntries = readdirSync(new URL('../public/', import.meta.url), { recursive: true });
-  const localPhotos = publicEntries.filter(path => /\.(?:avif|bmp|gif|jpe?g|webp)$/i.test(path));
-  assert.deepEqual(localPhotos, ['assets/hero-tomato-eggs.webp']);
-  assert.match(html, /src="assets\/hero-tomato-eggs\.webp"/);
-  const heroCredit = credits.split('\n').find(line => line.includes('id="photo-7"'));
-  assert.match(heroCredit, /Kaap bij Sneeuw.*File:Tomato_with_egg\.jpg.*CC0/);
+  assert.ok(publicEntries.every(path => !/\.(?:avif|bmp|gif|jpe?g|webp)$/i.test(path)));
   assert.doesNotMatch(html, /photos\//);
   assert.match(html, /href="photo-credits\.html"/);
   for (const id of [1, 15, 16, 20, 25, ...Array.from({ length: 10 }, (_, index) => 41 + index)]) {
