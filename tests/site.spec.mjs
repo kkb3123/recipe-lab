@@ -15,7 +15,11 @@ test('lists all recipes, searches, and filters by cuisine and chef', async ({ pa
   await page.locator('#search').fill('갈배제육볶음');
   await expect(cards).toHaveCount(1);
   await expect(cards.first()).toContainText('갈배제육볶음');
+  await page.locator('#search').press('Enter');
+  await expect(page.getByRole('heading', { name: '검색 결과' })).toBeInViewport();
+  await expect(page.locator('#recipeResults + #recipeDiscovery')).toHaveCount(1);
   await page.locator('#search').clear();
+  await expect(page.locator('#recipeDiscovery + #recipeResults')).toHaveCount(1);
   await page.locator('#categories').getByRole('button', { name: '한식', exact: true }).click();
   await expect(cards.first()).toBeVisible();
   expect(await cards.count()).toBeLessThan(51);
@@ -37,7 +41,7 @@ test('reads legacy storage, scales recipe, and persists favorites and shopping',
   await page.addInitScript(() => {
     if (!localStorage.getItem('recipeLabFavorites')) {
       localStorage.setItem('recipeLabFavorites', '[1]');
-      localStorage.setItem('recipeLabShoppingV13', '{"테스트|g":{"label":"테스트 10 g","done":false}}');
+      localStorage.setItem('recipeLabShoppingV13', '{"테스트|g":{"label":"테스트 10 g","done":false},"사과|개":{"label":"사과 0.5 개","done":true}}');
     }
   });
   await page.goto('/');
@@ -48,6 +52,8 @@ test('reads legacy storage, scales recipe, and persists favorites and shopping',
   const initialAmount = await ingredient.innerText();
   await page.locator('#plus').click();
   await expect(ingredient).not.toHaveText(initialAmount);
+  await expect(page.locator('#detail .ingredient').filter({ hasText: '양파' }))
+    .toContainText('0.75 개');
   await page.locator('.cook-steps input').first().check();
   await page.getByRole('button', { name: /장보기 목록에 담기/ }).click();
   await page.locator('#detailFav').click();
@@ -59,11 +65,16 @@ test('reads legacy storage, scales recipe, and persists favorites and shopping',
   await expect(card.locator('.heart')).not.toHaveClass(/saved/);
   await page.locator('#v13Shopping').click();
   await expect(page.locator('#v13Panel').getByRole('checkbox', { name: '테스트 10 g' })).toBeChecked();
+  await expect(page.locator('#v13Panel').getByRole('checkbox', { name: '사과 1개 (필요량 0.5개)' })).toBeChecked();
+  await expect(page.locator('#v13Panel').getByText('양파 1개 (필요량 0.75개)', { exact: true })).toBeVisible();
+  await expect(page.locator('#v13Panel').getByText('다진 마늘 1.5 큰술', { exact: true })).toBeVisible();
   const stored = await page.evaluate(() => ({
     favorites: JSON.parse(localStorage.getItem('recipeLabFavorites')),
     shopping: JSON.parse(localStorage.getItem('recipeLabShoppingV13')),
   }));
   expect(stored.favorites).toEqual([]);
+  expect(stored.shopping['사과|개']).toEqual({ label: '사과 0.5 개', done: true });
+  expect(stored.shopping['양파|개']).toEqual({ label: '양파 0.75 개', done: false });
   expect(stored.shopping['테스트|g']).toEqual({ label: '테스트 10 g', done: true });
   expect(Object.keys(stored.shopping).length).toBeGreaterThan(1);
   for (const value of Object.values(stored.shopping)) {
