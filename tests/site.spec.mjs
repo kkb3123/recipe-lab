@@ -10,6 +10,9 @@ test('lists all recipes, searches, and filters by cuisine and chef', async ({ pa
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
+  const hero = page.locator('.hero-picture img');
+  await expect(hero).toBeVisible();
+  await expect.poll(() => hero.evaluate(img => img.naturalWidth)).toBe(1150);
   const cards = page.locator('#recipes .recipe');
   await expect(cards).toHaveCount(51);
   await page.locator('#search').fill('갈배제육볶음');
