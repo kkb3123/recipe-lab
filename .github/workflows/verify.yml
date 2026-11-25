@@ -22,7 +22,17 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Run tests
         id: checks
-        run: npm test
+        env:
+          RECIPE_LAB_CAPTURE_DIR: test-results/screenshots
+        shell: bash
+        run: npm test | tee "$RUNNER_TEMP/recipe-lab-tests.log"
+      - name: Upload desktop and mobile screenshots
+        if: ${{ steps.checks.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-and-mobile-screenshots
+          path: test-results/screenshots
+          if-no-files-found: error
       - name: Record development update
         if: ${{ always() }}
         env:

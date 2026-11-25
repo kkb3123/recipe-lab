@@ -42,10 +42,11 @@ test('preserves manifest and icons', () => {
   }
 });
 
-test('publishes only attributed remote photos and includes every referenced local icon', () => {
+test('publishes only attributed photo thumbnails and includes every referenced local icon', () => {
   const credits = read('../public/photo-credits.html').toString();
   const publicEntries = readdirSync(new URL('../public/', import.meta.url), { recursive: true });
-  assert.ok(publicEntries.every(path => !/\.(?:avif|bmp|gif|jpe?g|webp)$/i.test(path)));
+  const images = publicEntries.filter(path => /\.(?:avif|bmp|gif|jpe?g|webp)$/i.test(path));
+  assert.deepEqual(images.sort(), Object.values(photos).map(photo => photo.thumbnail).sort());
   assert.doesNotMatch(html, /photos\//);
   assert.match(html, /href="photo-credits\.html"/);
   for (const id of [1, 15, 16, 20, 25, ...Array.from({ length: 10 }, (_, index) => 41 + index)]) {
@@ -55,6 +56,10 @@ test('publishes only attributed remote photos and includes every referenced loca
     assert.equal(new URL(photo.url).hostname, 'commons.wikimedia.org');
     assert.equal(new URL(photo.source).hostname, 'commons.wikimedia.org');
     assert.equal(new URL(photo.license).hostname, 'creativecommons.org');
+    assert.equal(photo.thumbnail, `assets/recipe-${id}.webp`);
+    const thumbnail = read('../public/' + photo.thumbnail);
+    assert.equal(thumbnail.toString('ascii', 8, 12), 'WEBP');
+    assert.ok(thumbnail.length < 150_000, `Photo ${id} exceeds the image size budget`);
     const credit = credits.split('\n').find(line => line.includes(`id="photo-${id}"`));
     assert.ok(credit?.includes(photo.license), `Missing license credit for photo ${id}`);
     assert.ok(credit.includes(photo.source), `Missing source credit for photo ${id}`);
@@ -62,4 +67,42 @@ test('publishes only attributed remote photos and includes every referenced loca
   for (const path of new Set(html.match(/icons\/[a-z0-9.-]+\.png/gi))) {
     assert.ok(read('../public/' + path).length > 0, path);
   }
+});
+
+function assertNewRecipe(recipe, photo) {
+  for (const field of ['name', 'chef', 'difficulty', 'sourceTitle', 'tip', 'sourceNote']) {
+    assert.ok(typeof recipe[field] === 'string' && recipe[field].trim(), `Missing ${field}`);
+  }
+  assert.ok(Number.isInteger(recipe.id) && recipe.id > 0, 'Invalid ID');
+  assert.ok(Number.isInteger(recipe.baseServings) && recipe.baseServings > 0, 'Missing serving count');
+  assert.ok(Number.isFinite(recipe.time) && recipe.time > 0, 'Missing cooking time');
+  assert.ok(recipe.steps?.length && recipe.steps.every(step => typeof step === 'string' && step.trim()), 'Missing cooking steps');
+  assert.ok(recipe.ingredients?.length && recipe.ingredients.every(item =>
+    item.name?.trim() && Number.isFinite(item.amount) && item.amount > 0 && item.unit?.trim()), 'Missing ingredient quantity');
+  const source = new URL(recipe.sourceUrl);
+  assert.equal(source.protocol, 'https:');
+  assert.ok(!source.username && !source.password);
+  assert.ok(source.hostname.endsWith('.kbs.co.kr') || source.hostname === 'kbs.co.kr' ||
+    (source.hostname === 'www.youtube.com' && source.pathname === '/watch' && /^[\w-]{11}$/.test(source.searchParams.get('v') ?? '')),
+  'Expected a KBS page or a specific YouTube video');
+  assert.ok(photo?.credit && photo?.source && photo?.license && photo?.thumbnail, 'Missing documented photo permission');
+}
+
+test('checks required ingredients, original source URLs and photo credits for new recipes', () => {
+  const baselineIds = new Set(baseline.map(item => item.id));
+  for (const recipe of recipes.filter(item => !baselineIds.has(item.id))) assertNewRecipe(recipe, photos[recipe.id]);
+
+  // Exercise the acceptance checks even when today's candidate list is empty.
+  const sample = {
+    id: 999, name: '테스트', chef: '테스트', difficulty: '쉬움', sourceTitle: '테스트',
+    tip: '테스트', sourceNote: '테스트', baseServings: 1, time: 10,
+    steps: ['테스트'], ingredients: [{ name: '테스트', amount: 1, unit: '개' }],
+    sourceUrl: 'https://www.youtube.com/watch?v=91KSUbId_fE',
+  };
+  const photo = { credit: '테스트', source: '테스트', license: '테스트', thumbnail: '테스트' };
+  assert.doesNotThrow(() => assertNewRecipe(sample, photo));
+  assert.throws(() => assertNewRecipe({ ...sample, ingredients: [{ name: '테스트' }] }, photo), /quantity/);
+  assert.throws(() => assertNewRecipe({ ...sample, sourceUrl: 'https://www.youtube.com/' }, photo), /specific YouTube/);
+  assert.throws(() => assertNewRecipe({ ...sample, sourceUrl: 'http://vod.kbs.co.kr/' }, photo), /https/);
+  assert.throws(() => assertNewRecipe(sample, null), /photo permission/);
 });
