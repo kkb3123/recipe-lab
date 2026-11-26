@@ -40,7 +40,7 @@ function showStep({ focus = false } = {}) {
       const delimiters = '[ ,·/&:;.!?~–—+]';
       return new RegExp(`(?:^|${delimiters})${literal}(?:(?:으로|로|에서|에|은|는|이|가|을|를|과|와|도|만|부터|까지))?(?=$|${delimiters})`).test(stepText);
     });
-    find('#cookingIngredientHeading').textContent = `이 단계에서 언급된 재료 · ${servings}인분`;
+    find('#cookingIngredientHeading').textContent = `이 단계에서 언급된 재료 · ${recipePortion(recipe,servings)}`;
     ingredients.append(...matched.map(ingredientRow));
     find('#cookingIngredientEmpty').hidden = matched.length > 0;
     find('#cookingQuantityNote').hidden = matched.length === 0;
@@ -51,7 +51,7 @@ function showStep({ focus = false } = {}) {
 
 function ingredientRow(ingredient) {
   const item = document.createElement('li');
-  item.textContent = `${ingredient.name} ${fmt(ingredient.amount * servings / (recipe.baseServings || 1))} ${ingredient.unit}`;
+  item.textContent = `${ingredient.name} ${recipeQuantity(recipe,ingredient,servings)}`;
   return item;
 }
 

@@ -83,11 +83,11 @@ function assertNewRecipe(recipe, photo) {
     assert.ok(typeof recipe[field] === 'string' && recipe[field].trim(), `Missing ${field}`);
   }
   assert.ok(Number.isInteger(recipe.id) && recipe.id > 0, 'Invalid ID');
-  assert.ok(Number.isInteger(recipe.baseServings) && recipe.baseServings > 0, 'Missing serving count');
+  assert.ok((recipe.baseServings === null && /인분.*미기재/.test(recipe.sourceNote)) || (Number.isInteger(recipe.baseServings) && recipe.baseServings > 0), 'Missing serving count');
   assert.ok(Number.isFinite(recipe.time) && recipe.time > 0, 'Missing cooking time');
   assert.ok(recipe.steps?.length && recipe.steps.every(step => typeof step === 'string' && step.trim()), 'Missing cooking steps');
   assert.ok(recipe.ingredients?.length && recipe.ingredients.every(item =>
-    item.name?.trim() && Number.isFinite(item.amount) && item.amount > 0 && item.unit?.trim()), 'Missing ingredient quantity');
+    item.name?.trim() && (item.amount === null ? item.unit === "원문" && item.quantityText?.trim() : Number.isFinite(item.amount) && item.amount > 0) && item.unit?.trim()), 'Missing ingredient quantity');
   const source = new URL(recipe.sourceUrl);
   assert.equal(source.protocol, 'https:');
   assert.ok(!source.username && !source.password);

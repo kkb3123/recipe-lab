@@ -97,5 +97,5 @@ test('falls back to the recipe name when an image fails and shows search feedbac
   await search.fill('새우젓');
   await expect(page.locator('#recipes [data-id="46"]')).toBeVisible();
   await search.fill('류수영');
-  await expect(page.locator('#recipes .recipe')).toHaveCount(12);
+  await expect(page.locator('#recipes .recipe')).toHaveCount(20);
 });
