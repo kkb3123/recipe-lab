@@ -40,18 +40,23 @@ function showStep({ focus = false } = {}) {
       const delimiters = '[ ,·/&:;.!?~–—+]';
       return new RegExp(`(?:^|${delimiters})${literal}(?:(?:으로|로|에서|에|은|는|이|가|을|를|과|와|도|만|부터|까지))?(?=$|${delimiters})`).test(stepText);
     });
+    const exact = (VERIFIED_STEP_AMOUNTS[recipe.id]?.[index] ?? []).map(([name, amount, unit]) => ({
+      name, amount, unit, ...(amount === null ? {quantityText: unit} : {}),
+    }));
+    const remaining = matched.filter(item => !exact.some(part => part.name === item.name));
     find('#cookingIngredientHeading').textContent = `이 단계에서 언급된 재료 · ${recipePortion(recipe,servings)}`;
-    ingredients.append(...matched.map(ingredientRow));
-    find('#cookingIngredientEmpty').hidden = matched.length > 0;
-    find('#cookingQuantityNote').hidden = matched.length === 0;
-    find('#cookingAllIngredients').replaceChildren(...recipe.ingredients.map(ingredientRow));
+    ingredients.append(...exact.map(item => ingredientRow(item, '단계 투입량 · ')),
+      ...remaining.map(item => ingredientRow(item, '전체 기준 · ')));
+    find('#cookingIngredientEmpty').hidden = ingredients.children.length > 0;
+    find('#cookingQuantityNote').hidden = remaining.length === 0;
+    find('#cookingAllIngredients').replaceChildren(...recipe.ingredients.map(item => ingredientRow(item)));
   }
   if (focus) progress.focus();
 }
 
-function ingredientRow(ingredient) {
+function ingredientRow(ingredient, prefix = '') {
   const item = document.createElement('li');
-  item.textContent = `${ingredient.name} ${recipeQuantity(recipe,ingredient,servings)}`;
+  item.textContent = `${prefix}${ingredient.name} ${recipeQuantity(recipe,ingredient,servings)}`;
   return item;
 }
 

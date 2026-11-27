@@ -114,7 +114,10 @@ function renderCard(result) {
   const coverage = document.createElement('p');
   coverage.textContent = complete ? '필수 재료 종류가 모두 있어요.' :
     `부족한 필수 재료 ${missing.length}개`;
-  card.append(picture, title, meta, coverage);
+  card.append(picture, title, meta, coverage, button('식단에 담기', () => {
+    dialog.close();
+    window.addFridgeRecipeToPlan(recipe.id);
+  }));
   if (photo?.rights === 'ai-generated') {
     const credit = document.createElement('small');
     credit.textContent = 'AI 생성 참고 이미지';

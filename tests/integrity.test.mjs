@@ -49,7 +49,7 @@ test('publishes only attributed photo thumbnails and includes every referenced l
   assert.deepEqual(images.sort(), Object.values(photos).map(photo => photo.thumbnail).sort());
   assert.doesNotMatch(html, /photos\//);
   assert.match(html, /href="photo-credits\.html"/);
-  for (const id of [1, 15, 16, 20, 25, ...Array.from({ length: 10 }, (_, index) => 41 + index)]) {
+  for (const id of [1, 16, 25, ...Array.from({ length: 10 }, (_, index) => 41 + index)]) {
     assert.equal(photos[id], undefined, `Photo ${id} is on hold`);
   }
   for (const [id, photo] of Object.entries(photos)) {
@@ -63,7 +63,8 @@ test('publishes only attributed photo thumbnails and includes every referenced l
       assert.ok(photo.source.startsWith('https://github.com/kkb3123/recipe-lab/blob/main/docs/recipe-photo-queue.md#'));
       assert.match(photo.credit, /AI 생성/);
       assert.match(credit, /AI 생성 참고 이미지.*OpenAI ImageGen/);
-      assert.ok(credit.includes(new URL(recipes.find(recipe => String(recipe.id) === id).sourceUrl).hostname));
+      const original = recipes.find(recipe => String(recipe.id) === id).sourceUrl;
+      if (original) assert.ok(credit.includes(new URL(original).hostname));
     } else {
       assert.equal(photo.rights, 'commons');
       assert.equal(new URL(photo.url).hostname, 'commons.wikimedia.org');

@@ -1,0 +1,14 @@
+#mealPlan{width:min(950px,calc(100% - 20px));max-height:calc(100dvh - 20px);padding:clamp(12px,3vw,24px);border:1px solid #e0e7d4;border-radius:18px;background:#fffdf7;color:#344032;overflow:auto;overscroll-behavior:contain}
+#mealPlan::backdrop{background:rgb(34 41 30 / 55%)}
+#mealPlan .meal-header,#mealPlan .meal-controls{position:static;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#mealPlan .meal-header{justify-content:space-between;background:transparent!important}
+#mealPlan button,#mealPlan select,#mealPlan input{max-width:100%;min-height:44px;border:1px solid #dce4d2;border-radius:9px;padding:7px 9px;background:#fff;color:inherit}
+#mealFamily,#mealServings{width:68px}
+#mealRecipe{width:min(100%,270px)}
+#mealWeek{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,175px),1fr));gap:8px;margin:12px 0}
+#mealWeek section,#mealEditor{min-width:0;border:1px solid #e2e8d8;padding:9px;border-radius:10px}
+#mealWeek h3{font-size:1rem;margin:0 0 6px}
+#mealWeek button{display:block;width:100%;text-align:left;margin:5px 0}
+#mealPlan label{max-width:100%;min-width:0}
+#mealPlan :focus-visible{outline:2px solid #3d602a;outline-offset:2px}
+@media(min-width:701px){.quick-links:has(#openMealPlan){grid-template-columns:repeat(6,minmax(0,1fr))}}
