@@ -79,8 +79,13 @@ test('backs up, validates and restores all data while rejecting malformed files'
   await page.locator('#backupAllData').click();
   const backup = await (await downloaded).path();
   await page.evaluate(() => localStorage.setItem('recipeLabFavorites','[2]'));
-  page.once('dialog',dialog=>dialog.accept());
+  const invalidNotice = new Promise(resolve => page.once('dialog', async dialog => {
+    const message = dialog.message();
+    await dialog.accept();
+    resolve(message);
+  }));
   await page.locator('#allDataFile').setInputFiles({name:'broken.json',mimeType:'application/json',buffer:Buffer.from('{invalid')});
+  expect(await invalidNotice).toContain('손상');
   expect(await page.evaluate(()=>localStorage.getItem('recipeLabFavorites'))).toBe('[2]');
   page.once('dialog',dialog=>dialog.accept());
   await page.locator('#allDataFile').setInputFiles(backup);
