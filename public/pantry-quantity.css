@@ -1,0 +1,12 @@
+#pantryQuantities,#pantryPurchases{width:min(580px,calc(100% - 20px));max-height:calc(100dvh - 20px);padding:16px;border:1px solid #e0e7d4;border-radius:16px;background:#fffdf7;color:#344032;overflow:auto}
+#pantryQuantities::backdrop,#pantryPurchases::backdrop{background:rgb(34 41 30 / 55%)}
+#pantryQuantityForm{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+#pantryQuantityForm label{min-width:0;max-width:100%}
+#pantryQuantities :is(button,input,select),#pantryPurchases :is(button,input),#cookingStockReview button{max-width:100%;min-height:44px;padding:7px 9px;border:1px solid #dce4d2;border-radius:9px;background:#fff;color:inherit}
+#pantryQuantityList li,#pantryPurchaseList li{margin:.35em 0;overflow-wrap:anywhere}
+#pantryPurchaseList input,#pantryAmount{width:7em}
+#pantryUnit{width:9em}
+#fridgeResults summary,#mealQuantityComparison summary{min-height:44px;padding:10px 0;cursor:pointer;box-sizing:border-box}
+#cookingStockReview{overflow-wrap:anywhere}
+
+#recipeStockComparison summary{min-height:44px;padding:10px 0;box-sizing:border-box;cursor:pointer}

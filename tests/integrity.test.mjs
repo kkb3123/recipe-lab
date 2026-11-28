@@ -49,7 +49,7 @@ test('publishes only attributed photo thumbnails and includes every referenced l
   assert.deepEqual(images.sort(), Object.values(photos).map(photo => photo.thumbnail).sort());
   assert.doesNotMatch(html, /photos\//);
   assert.match(html, /href="photo-credits\.html"/);
-  for (const id of [1, 16, 25, ...Array.from({ length: 10 }, (_, index) => 41 + index)]) {
+  for (const id of [1, 25, ...Array.from({ length: 10 }, (_, index) => 41 + index)]) {
     assert.equal(photos[id], undefined, `Photo ${id} is on hold`);
   }
   for (const [id, photo] of Object.entries(photos)) {

@@ -19,7 +19,7 @@ test('lists all recipes, searches, and filters by cuisine and chef', async ({ pa
   await page.keyboard.press('Escape');
   await expect(page.locator('#modal')).not.toHaveClass(/open/);
   const cards = page.locator('#recipes .recipe');
-  await expect(cards).toHaveCount(70);
+  await expect(cards).toHaveCount(71);
   await page.locator('#search').fill('갈배제육볶음');
   await expect(cards).toHaveCount(1);
   await expect(cards.first()).toContainText('갈배제육볶음');
@@ -30,7 +30,7 @@ test('lists all recipes, searches, and filters by cuisine and chef', async ({ pa
   await expect(page.locator('#recipeDiscovery + #recipeResults')).toHaveCount(1);
   await page.locator('#categories').getByRole('button', { name: '한식', exact: true }).click();
   await expect(cards.first()).toBeVisible();
-  expect(await cards.count()).toBeLessThan(70);
+  expect(await cards.count()).toBeLessThan(71);
   await page.locator('#categories').getByRole('button', { name: '전체', exact: true }).click();
   await page.locator('#chefs').getByRole('button', { name: '류수영', exact: true }).click();
   await expect(cards).toHaveCount(28);

@@ -1,3 +1,4 @@
+import { renderQuantityComparison } from './pantry-quantity.js';
 import { fridgeKey, recommendRecipes } from './fridge-model.js';
 import { appendMealShopping, copyPreviousWeek, dateKey, emptyPlan, entriesFor, mealPlanKey, meals, monday, shiftDate, shoppingFor } from './meal-plan-model.js';
 
@@ -107,6 +108,7 @@ function render() {
     week.append(section);
   }
   $meal('mealShopping').replaceChildren();
+  $meal('mealQuantityComparison').hidden = true;
   $meal('mealShopAdd').disabled = true;
 }
 
@@ -118,6 +120,9 @@ function renderShopping() {
   const list = $meal('mealShopping');
   list.replaceChildren();
   const entries = entriesFor(plan, selectedDates(), recipes);
+  const comparison = $meal('mealQuantityComparison');
+  comparison.hidden = !entries.length;
+  renderQuantityComparison($meal('mealQuantityList'),entries.flatMap(entry => entry.items));
   for (const { label } of Object.values(shoppingFor(entries))) {
     const row = document.createElement('li');
     row.textContent = label;

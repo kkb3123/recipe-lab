@@ -1,3 +1,6 @@
+import { renderCookingStock } from './pantry-quantity.js';
+import { usageFromRecipe } from './pantry-quantity-model.js';
+let stockReceipt;
 const dialog = document.querySelector('#cookingMode');
 const find = selector => dialog.querySelector(selector);
 const title = find('h2');
@@ -29,6 +32,9 @@ function showStep({ focus = false } = {}) {
   previous.disabled = index === 0;
   next.textContent = complete ? '레시피로 돌아가기' : index === recipe.steps.length - 1 ? '요리 완료' : '다음 단계';
   find('#cookingIngredientSection').hidden = complete;
+  const review = find('#cookingStockReview');
+  review.hidden = !complete;
+  if (complete) renderCookingStock(review,usageFromRecipe(recipe,servings),stockReceipt);
   ingredients.replaceChildren();
   if (!complete) {
     // Older recipes store prose steps. Exact mentions are shown first and the
@@ -128,6 +134,7 @@ async function keepScreenOn() {
 document.querySelector('#detail').addEventListener('click', event => {
   if (!event.target.closest('#startCooking') || !selected) return;
   recipe = selected;
+  stockReceipt = { rendered:false };
   index = 0;
   duration.value = '5';
   resetTimer();

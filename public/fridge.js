@@ -1,3 +1,4 @@
+import { renderQuantityComparison } from './pantry-quantity.js';
 import { fridgeKey, buildIngredientCatalog, categories, recommendRecipes, mergeShopping } from './fridge-model.js';
 
 const dialog = document.querySelector('#fridgeDialog');
@@ -11,6 +12,10 @@ const status = lookup('fridgeStatus');
 const catalog = buildIngredientCatalog(R);
 const names = new Map(catalog.map(item => [item.id, item.name]));
 const queued = new Set();
+window.addEventListener('recipe-pantry-updated', () => {
+  try { selected = new Set(JSON.parse(localStorage.getItem(fridgeKey) || '[]')); } catch {}
+  if (dialog.open) { renderChoices(); renderResults(); }
+});
 let selected;
 try {
   const stored = JSON.parse(localStorage.getItem(fridgeKey) || '[]');
@@ -134,6 +139,15 @@ function renderCard(result) {
     }
     card.append(list, queueButton('부족한 재료 모두 장보기에 담기', recipe, missing));
   }
+  const quantities = document.createElement('details');
+  const quantityLabel = document.createElement('summary');
+  quantityLabel.textContent = '필요·보유·부족 수량';
+  const quantityList = document.createElement('div');
+  quantities.append(quantityLabel,quantityList);
+  quantities.ontoggle = () => {
+    if (quantities.open) renderQuantityComparison(quantityList,recipe.ingredients);
+  };
+  card.append(quantities);
   const optional = recipe.ingredients.filter(item => item.optional).map(item => item.name);
   if (optional.length) {
     const note = document.createElement('p');
